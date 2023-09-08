@@ -31,7 +31,7 @@ struct Lexer { // one lexer exists for each line, since this is assembly
 	buffer: String // buffer of symbols read in hopes of making sense later
 }
 
-pub fn lexify(program: &Vec<String>) -> LexRes<Vec<Node>> {
+pub fn read(program: &Vec<String>) -> LexRes<Vec<Node>> {
 	let mut nodes = match tokenize(program) { // generally only returns Tokens, not Nodes
 		Ok(nodes) => nodes,
 		Err(err) => return Err(err)
@@ -66,9 +66,9 @@ fn tokenize(program: &Vec<String>) -> LexRes<Vec<Node>> {
 	let mut nodes: Vec<Node> = Vec::new();
 
 	for (line_num, line) in program.iter().enumerate() {
-	let line = line.trim();
-	let line = line.to_string(); // trim() produces a &str
-	if line.len() == 0 { continue; }
+		let line = line.trim();
+		let line = line.to_string(); // trim() produces a &str
+		if line.len() == 0 { continue; }
 
 		let mut lexer = Lexer {
 			text: line,
@@ -176,7 +176,11 @@ fn consume_label(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 			'0'..='9' => buffer.push(character),
 			'_' => buffer.push(character),
 			',' => break,
-			' ' => break,
+			' ' => {},
+			'#' => {
+				consume_comment(idx, &lexer);
+				()
+			},
 			_ => return Err(LexErr {
 				msg: format!("Illegal symbol \"{}\".", character.to_string().red()),
 				line: lexer.number,
@@ -188,7 +192,8 @@ fn consume_label(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 		*idx += 1;
 	}
 
-	Ok(Node::Token(Token::Empty))
+	let len = buffer.len();
+	Ok(Node::Token(Token::Label(buffer, lexer.number, *idx - len, len as u8)))
 }
 
 fn consume_number(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
