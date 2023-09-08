@@ -52,5 +52,5 @@ fn main() {
         return;
     }
 
-    println!("{:?}", lexed_program);
+    println!("{:#?}", lexed_program);
 }
