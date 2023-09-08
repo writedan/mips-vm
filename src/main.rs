@@ -1,7 +1,10 @@
-use clap::Parser;
 use std::fs::File;
 use std::path::Path;
+use std::io::{self, BufRead};
+use clap::Parser;
 use colored::Colorize;
+
+mod lexer;
 
 /// A light-weight MIPS emulator and debugger.
 #[derive(Parser, Debug)]
@@ -28,4 +31,26 @@ fn main() {
 
         Ok(file) => file,
     };
+
+    let program: Vec<String> = io::BufReader::new(file).lines().map(|l| l.expect("Could not parse line.")).collect();
+
+    let lexed_program = lexer::lexify(&program);
+    if let Err(error) = lexed_program {
+        let prelude = format!("{} ({}) on line {} at {}. ", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
+        print!("{}", prelude);
+        let mut line = &program[error.line];
+        let range = error.character..error.len;
+        for idx in 0..line.len() {
+            if range.contains(&idx) {
+                print!("{}", line.chars().nth(idx).expect("This should not fail.").to_string().bright_black());
+            } else {
+                print!("{}", line.chars().nth(idx).expect("This should not fail."));
+            }
+        }
+        println!();
+        println!("{} {}", " ".repeat(prelude.len() - 21 + error.character), error.msg);
+        return;
+    }
+
+    println!("{:?}", lexed_program);
 }
