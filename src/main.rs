@@ -4,6 +4,8 @@ use std::io::{self, BufRead};
 use clap::Parser;
 use colored::Colorize;
 
+use unicode_segmentation::UnicodeSegmentation; // 1.6.0
+
 mod lexer;
 
 use crate::lexer::{Token, Node};
@@ -39,20 +41,22 @@ fn main() {
     let lexed_program = lexer::read(&program);
     if let Err(error) = lexed_program {
         println!("{:#?}", error);
-        let prelude = format!("{} ({}) on line {} at {}: ", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
-        print!("{}", prelude);
+        let prelude = format!("{} ({}) on line {} at {}.", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
+        let len = prelude.graphemes(true).count();
+        println!("{}", prelude);
         let mut line = &program[error.line].to_string();
         let mut line = line.trim().to_string();
-        let range = error.character..=(error.character + error.len + 1);
+        let range = error.character..(error.character + error.len);
+        print!("\t");
         for idx in 0..line.len() {
             if range.contains(&idx) {
-                print!("{}", line.chars().nth(idx).expect("This should not fail.").to_string().bright_black());
+                print!("{}", line.chars().nth(idx).expect("This should not fail.").to_string().red());
             } else {
                 print!("{}", line.chars().nth(idx).expect("This should not fail."));
             }
         }
         println!();
-        println!("{} {}", " ".repeat(prelude.len()), error.msg);
+        println!("\t{}{} {}", " ".repeat(error.character), "^".repeat(error.len).red().bold(), error.msg);
         return;
     }
 
