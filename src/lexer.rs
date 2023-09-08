@@ -143,7 +143,7 @@ fn consume_instruction(idx: &mut usize, lexer: &mut Lexer) -> LexRes<Node> {
 				Err(err) => return Err(err)
 			},
 			'#' => consume_comment(idx, &lexer),
-			'a'..='z' => match consume_label(idx, &lexer) {
+			'a'..='z' | 'A'..='Z' => match consume_label(idx, &lexer) {
 				Ok(node) => node,
 				Err(err) => return Err(err)
 			},
@@ -169,7 +169,7 @@ fn consume_label(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 	while *idx < lexer.text.len() {
 		let character = get_character(*idx, &lexer.text);
 		match character {
-			'a'..='z' => buffer.push(character),
+			'a'..='z' | 'A'..='Z' => buffer.push(character),
 			'0'..='9' => buffer.push(character),
 			'_' => buffer.push(character),
 			',' => break,
@@ -267,7 +267,7 @@ fn consume_register(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 		match character {
 			',' => break,
 			' ' => {},
-			'a'..='z' => buffer.push(character),
+			'a'..='z' | 'A'..='Z' => buffer.push(character),
 			'0'..='9' => buffer.push(character),
 			_ => return Err(LexErr {
 				msg: format!("Illegal symbol \"{}\". Only alphanumeric characters are legal in register identifier.", character.to_string().red()),
@@ -378,7 +378,7 @@ fn consume_directive(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 		let character = get_character(*idx, &lexer.text);
 
 		match character {
-			'a'..='z' => name.push(character),
+			'a'..='z' | 'A'..='Z' => name.push(character),
 			' ' => break, // space deliminates the section name
 			_ => return Err(LexErr {
 				msg: format!("Illegal symbol \"{}\". Only alphabetic characters are legal in section name.", character.to_string().red()),
