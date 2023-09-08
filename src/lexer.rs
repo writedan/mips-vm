@@ -31,33 +31,30 @@ struct Lexer { // one lexer exists for each line, since this is assembly
 	buffer: String // buffer of symbols read in hopes of making sense later
 }
 
+impl Token {
+	fn remove(&self) -> bool {
+		match self {
+			Token::Empty => true,
+			Token::Placehold(_) => true,
+			_ => false
+		}
+	}
+}
+
+impl Node {
+	fn remove(&self) -> bool {
+		match self {
+			Node::Token(token) => token.remove(),
+			_ => false
+		}
+	}
+}
+
 pub fn read(program: &Vec<String>) -> LexRes<Vec<Node>> {
 	let mut nodes = match tokenize(program) { // generally only returns Tokens, not Nodes
-		Ok(nodes) => nodes,
+		Ok(nodes) => nodes.into_iter().filter(|n| !n.remove()).collect(),
 		Err(err) => return Err(err)
 	};
-
-	// we will have to do a second pass to transform it into a hierarchial structureå
-
-	let mut idx = 0;
-	while idx < nodes.len() {
-		let node = &nodes[idx];
-		if let Node::Token(token) = node {
-			match token {
-				Token::Placehold(_) => {
-					nodes.remove(idx);
-					continue;
-				}
-				Token::Empty => {
-					nodes.remove(idx);
-					continue;
-				},
-				_ => {}
-			}
-		} 
-
-		idx += 1;
-	}
 
 	Ok(nodes)
 }
@@ -101,7 +98,7 @@ fn tokenize(program: &Vec<String>) -> LexRes<Vec<Node>> {
 				},
 				_ => {
 					lexer.buffer.push(character);
-					Node::Token(Token::Placehold(character))
+					(Node::Token(Token::Placehold(character)))
 				}
 			});
 			idx += 1;
@@ -149,7 +146,7 @@ fn consume_instruction(idx: &mut usize, lexer: &mut Lexer) -> LexRes<Node> {
 			'a'..='z' => match consume_label(idx, &lexer) {
 				Ok(node) => node,
 				Err(err) => return Err(err)
-			}
+			},
 			' ' => Node::Token(Token::Empty),
 			_ => {
 				return Err(LexErr {
@@ -176,10 +173,12 @@ fn consume_label(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 			'0'..='9' => buffer.push(character),
 			'_' => buffer.push(character),
 			',' => break,
-			' ' => {},
+			' ' => match skip_whitespace(idx, lexer) {
+				Err(err) => return Err(err),
+				Ok(node) => {}
+			},
 			'#' => {
 				consume_comment(idx, &lexer);
-				()
 			},
 			_ => return Err(LexErr {
 				msg: format!("Illegal symbol \"{}\".", character.to_string().red()),
@@ -196,12 +195,44 @@ fn consume_label(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 	Ok(Node::Token(Token::Label(buffer, lexer.number, *idx - len, len as u8)))
 }
 
+// consumes spaces until a comma-delimeter is reached
+// this is kinda hacky but i don't see a better way to validate the code
+fn skip_whitespace(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
+	while *idx < lexer.text.len() {
+		let character = get_character(*idx, &lexer.text);
+		match character {
+			' ' => {},
+			',' => break,
+			'#' => {
+				*idx -= 1;
+				break;
+			}
+			_ => {
+				return Err(LexErr {
+					msg: format!("Unexpected symbol \"{}\". Comma-delimit instruction arguments.", character),
+					line: lexer.number,
+					character:  *idx,
+					len: 1
+				})
+			}
+		}
+
+		*idx += 1;
+	}
+
+	Ok(Node::Token(Token::Empty))
+}
+
 fn consume_number(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 	let mut buffer = String::new();
 	while *idx < lexer.text.len() {
 		let character = get_character(*idx, &lexer.text);
 		match character {
-			' ' => break,
+			' ' => match skip_whitespace(idx, &lexer) {
+				Err(err) => return Err(err),
+				Ok(_) => {}
+			},
+			'#' => {consume_comment(idx, &lexer); ()},
 			',' => break,
 			'0'..='9' => buffer.push(character),
 			_ => return Err(LexErr {
