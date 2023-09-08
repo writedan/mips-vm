@@ -4,10 +4,7 @@ use std::io::{self, BufRead};
 use clap::Parser;
 use colored::Colorize;
 
-use unicode_segmentation::UnicodeSegmentation; // 1.6.0
-
 mod lexer;
-
 use crate::lexer::{Token, Node};
 
 /// A light-weight MIPS emulator and debugger.
@@ -42,7 +39,6 @@ fn main() {
     if let Err(error) = lexed_program {
         println!("{:#?}", error);
         let prelude = format!("{} ({}) on line {} at {}.", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
-        let len = prelude.graphemes(true).count();
         println!("{}", prelude);
         let mut line = &program[error.line].to_string();
         let mut line = line.trim().to_string();
