@@ -6,6 +6,8 @@ use colored::Colorize;
 
 mod lexer;
 
+use crate::lexer::{Token, Node};
+
 /// A light-weight MIPS emulator and debugger.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -36,10 +38,12 @@ fn main() {
 
     let lexed_program = lexer::lexify(&program);
     if let Err(error) = lexed_program {
+        println!("{:#?}", error);
         let prelude = format!("{} ({}) on line {} at {}. ", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
+        let prelude = prelude.trim();
         print!("{}", prelude);
         let mut line = &program[error.line];
-        let range = error.character..error.len;
+        let range = error.character..=(error.character + error.len);
         for idx in 0..line.len() {
             if range.contains(&idx) {
                 print!("{}", line.chars().nth(idx).expect("This should not fail.").to_string().bright_black());
@@ -48,9 +52,17 @@ fn main() {
             }
         }
         println!();
-        println!("{} {}", " ".repeat(prelude.len() - 21 + error.character), error.msg);
+        println!("{}", error.msg);
         return;
     }
 
-    println!("{:#?}", lexed_program);
+    for node in lexed_program.unwrap() {
+        if let Node::Token(token) = node {
+            println!("{:?}", token);
+        } else if let Node::Tree(tree) = node {
+            let mut buffer = String::new();
+            tree.write_formatted(&mut buffer).unwrap();
+            println!("{}", buffer);
+        }
+    }
 }

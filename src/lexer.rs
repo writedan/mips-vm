@@ -6,12 +6,12 @@ use crate::lexer::errors::*;
 
 #[derive(Debug)]
 pub enum Token { // each token minimally has a (usize, usize, u8) being (line number, character index, len)
-	Section(String, usize, usize, u8), // sections are given as ".{name}"
-	DefLabel(String, usize, usize, u8), // definition of labels, given as "{name}:" in data section but merely "{name}" in the text section
-	Directive(String, usize, usize, u8), // directives of labels, given as ".{name}" following a DefLabel
+	DefLabel(String, usize, usize, u8), // definition of labels, given as "{name}: .{type} {value}" in .data 
+	Directive(String, usize, usize, u8), // given as ".{name}"
 	Instruction(String, usize, usize, u8),
 	Register(String, usize, usize, u8),
 	Number(u32, usize, usize, u8),
+	String(String, usize, usize, u8),
 	Label(String, usize, usize, u8), // labels used outside definitons
 	Empty,
 	Placehold(char)
@@ -32,14 +32,34 @@ struct Lexer { // one lexer exists for each line, since this is assembly
 }
 
 pub fn lexify(program: &Vec<String>) -> LexRes<Vec<Node>> {
-	let tokens = match tokenize(program) { // generally only returns Tokens, not Nodes
-		Ok(tokens) => tokens,
+	let mut nodes = match tokenize(program) { // generally only returns Tokens, not Nodes
+		Ok(nodes) => nodes,
 		Err(err) => return Err(err)
 	};
 
-	// we will have to do a second pass to transform it into a hierarchial structure
+	// we will have to do a second pass to transform it into a hierarchial structureå
 
-	Ok(tokens)
+	let mut idx = 0;
+	while idx < nodes.len() {
+		let node = &nodes[idx];
+		if let Node::Token(token) = node {
+			match token {
+				Token::Placehold(_) => {
+					nodes.remove(idx);
+					continue;
+				}
+				Token::Empty => {
+					nodes.remove(idx);
+					continue;
+				},
+				_ => {}
+			}
+		} 
+
+		idx += 1;
+	}
+
+	Ok(nodes)
 }
 
 fn tokenize(program: &Vec<String>) -> LexRes<Vec<Node>> {
@@ -62,7 +82,7 @@ fn tokenize(program: &Vec<String>) -> LexRes<Vec<Node>> {
 			nodes.push(match character {
 				'#' => consume_comment(&mut idx, &lexer),
 				'.' => {
-					match consume_section(&mut idx, &lexer) {
+					match consume_directive(&mut idx, &lexer) {
 						Ok(node) => node,
 						Err(err) => return Err(err)
 					}
@@ -73,7 +93,12 @@ fn tokenize(program: &Vec<String>) -> LexRes<Vec<Node>> {
 						Err(err) => return Err(err)
 					}
 				},
-
+				' ' => {
+					match consume_instruction(&mut idx, &mut lexer) {
+						Ok(node) => node,
+						Err(err) => return Err(err)
+					}
+				},
 				_ => {
 					lexer.buffer.push(character);
 					Node::Token(Token::Placehold(character))
@@ -84,6 +109,143 @@ fn tokenize(program: &Vec<String>) -> LexRes<Vec<Node>> {
 	}
 
 	Ok(nodes)
+}
+
+fn consume_instruction(idx: &mut usize, lexer: &mut Lexer) -> LexRes<Node> {
+	let identifier = lexer.buffer.drain(..).collect::<String>(); // we retain the value but clear the buffer
+	let start = lexer.text.find(&identifier).unwrap();
+	let label = Node::Token(Token::Instruction(identifier, lexer.number, start, *idx as u8));
+
+	let mut tree = TreeBuilder::new().with_root(label).build();
+	let mut root = match tree.root_id() {
+		Some(root) => root,
+		None => {
+			return Err(LexErr {
+				msg: "Tree root vanished.".to_string(),
+				line: lexer.number,
+				character: *idx,
+				len: 1
+			})
+		}
+	};
+
+	let mut root = tree.get_mut(root).unwrap();
+
+	*idx += 1;
+
+	// some code must be duplicated here until a better version is found
+	while *idx < lexer.text.len() {
+		let character = get_character(*idx, &lexer.text);
+		root.append(match character {
+			'$' => match consume_register(idx, &lexer) {
+				Ok(node) => node,
+				Err(err) => return Err(err)
+			},
+			'0'..='9' => match consume_number(idx, &lexer) {
+				Ok(node) => node,
+				Err(err) => return Err(err)
+			},
+			'#' => consume_comment(idx, &lexer),
+			'a'..='z' => match consume_label(idx, &lexer) {
+				Ok(node) => node,
+				Err(err) => return Err(err)
+			}
+			' ' => Node::Token(Token::Empty),
+			_ => {
+				return Err(LexErr {
+					msg: format!("Unknown symbol \"{}\"", character.to_string().red().bold()),
+					line: lexer.number,
+					character: *idx,
+					len: 1
+				})
+			}
+		});
+
+		*idx += 1;
+	}
+
+	Ok(Node::Tree(tree))
+}
+
+fn consume_label(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
+	let mut buffer = String::new();
+	while *idx < lexer.text.len() {
+		let character = get_character(*idx, &lexer.text);
+		match character {
+			'a'..='z' => buffer.push(character),
+			'0'..='9' => buffer.push(character),
+			'_' => buffer.push(character),
+			',' => break,
+			' ' => break,
+			_ => return Err(LexErr {
+				msg: format!("Illegal symbol \"{}\".", character.to_string().red()),
+				line: lexer.number,
+				character: *idx,
+				len: 1
+			})
+		}
+
+		*idx += 1;
+	}
+
+	Ok(Node::Token(Token::Empty))
+}
+
+fn consume_number(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
+	let mut buffer = String::new();
+	while *idx < lexer.text.len() {
+		let character = get_character(*idx, &lexer.text);
+		match character {
+			' ' => break,
+			',' => break,
+			'0'..='9' => buffer.push(character),
+			_ => return Err(LexErr {
+				msg: format!("Illegal symbol \"{}\". Only numeric characters are legal when beginning with a numeral.", character.to_string().red()),
+				line: lexer.number,
+				character: *idx,
+				len: 1
+			})
+		}
+		*idx += 1;
+	}
+
+	let len = buffer.len();
+	let buffer = match buffer.parse::<u32>() {
+		Ok(int) => int,
+		Err(err) => return Err(LexErr {
+			msg: format!("An error occured trying to parse number \"{}\"", buffer),
+			line: lexer.number,
+			character: *idx,
+			len: 1
+		})
+	};
+
+	Ok(Node::Token(Token::Number(buffer, lexer.number, *idx - len, len as u8)))
+}
+
+fn consume_register(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
+	let mut buffer = String::new();
+	*idx += 1;
+	while *idx < lexer.text.len() {
+		let character = get_character(*idx, &lexer.text);
+		match character {
+			',' => break,
+			' ' => {},
+			'a'..='z' => buffer.push(character),
+			'0'..='9' => buffer.push(character),
+			_ => return Err(LexErr {
+				msg: format!("Illegal symbol \"{}\". Only alphanumeric characters are legal in register identifier.", character.to_string().red()),
+				line: lexer.number,
+				character: *idx,
+				len: 1
+			})
+		}
+
+		*idx += 1;
+	}
+
+	let len = buffer.len();
+	Ok(Node::Token(Token::Register(buffer, lexer.number, *idx - len, len as u8)))
 }
 
 fn consume_def_label(idx: &mut usize, lexer: &mut Lexer) -> LexRes<Node> {
@@ -113,12 +275,66 @@ fn consume_def_label(idx: &mut usize, lexer: &mut Lexer) -> LexRes<Node> {
 
 	let mut root = tree.get_mut(root).unwrap();
 
-	root.append(Node::Token(Token::Empty));
+	// some code must be duplicated here until a better version is found
+	while *idx < lexer.text.len() {
+		let character = get_character(*idx, &lexer.text);
+		root.append(match character {
+			'.' => match consume_directive(idx, &lexer) {
+				Ok(node) => node,
+				Err(err) => return Err(err)
+			},
+			' ' => {
+				Node::Token(Token::Empty)
+			},
+			'"' => match consume_string(idx, &lexer) {
+				Ok(node) => node,
+				Err(err) => return Err(err)
+			},
+			'#' => consume_comment(idx, &lexer),
+			_ => return Err(LexErr {
+				msg: format!("Unknown symbol \"{}\".", character.to_string().red().bold()),
+				line: lexer.number,
+				character: *idx,
+				len: 1
+			})
+		});
+
+		*idx += 1;
+	}
 
 	Ok(Node::Tree(tree))
 }
 
-fn consume_section(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
+fn consume_string(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
+	*idx += 1; // consume the entry point
+	let mut buffer = String::new();
+
+	while *idx < lexer.text.len() {
+		let character = get_character(*idx, &lexer.text);
+		match character {
+			'"' => match buffer.chars().last() {
+				Some(character) => {
+					if !(character == '\\') { break; }
+					else { buffer.push(character); }
+				},
+				None => return Err(LexErr {
+					msg: format!("Empty string defined here."),
+					line: lexer.number,
+					character: *idx - 1,
+					len: 1
+				})
+			},
+			_ => buffer.push(character)
+		}
+
+		*idx += 1;
+	}
+
+	let len = buffer.len();
+	Ok(Node::Token(Token::String(buffer, lexer.number, *idx, len as u8)))
+}
+
+fn consume_directive(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 	*idx += 1; // consume our entry point already matched
 	let mut name = String::new();
 
@@ -129,7 +345,7 @@ fn consume_section(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 			'a'..='z' => name.push(character),
 			' ' => break, // space deliminates the section name
 			_ => return Err(LexErr {
-				msg: format!("Illegal symbol {}. Only alphabetic characters are legal in section name.", character.to_string().red()),
+				msg: format!("Illegal symbol \"{}\". Only alphabetic characters are legal in section name.", character.to_string().red()),
 				line: lexer.number,
 				character: *idx,
 				len: 1
@@ -141,7 +357,7 @@ fn consume_section(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 
 	let len = name.len();
 
-	Ok(Node::Token(Token::Section(name, lexer.number, *idx - len, len as u8)))
+	Ok(Node::Token(Token::Directive(name, lexer.number, *idx - len, len as u8)))
 }
 
 fn consume_comment(idx: &mut usize, lexer: &Lexer) -> Node {
