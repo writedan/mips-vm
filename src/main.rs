@@ -36,14 +36,14 @@ fn main() {
 
     let program: Vec<String> = io::BufReader::new(file).lines().map(|l| l.expect("Could not parse line.")).collect();
 
-    let lexed_program = lexer::lexify(&program);
+    let lexed_program = lexer::read(&program);
     if let Err(error) = lexed_program {
         println!("{:#?}", error);
-        let prelude = format!("{} ({}) on line {} at {}. ", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
-        let prelude = prelude.trim();
+        let prelude = format!("{} ({}) on line {} at {}: ", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
         print!("{}", prelude);
-        let mut line = &program[error.line];
-        let range = error.character..=(error.character + error.len);
+        let mut line = &program[error.line].to_string();
+        let mut line = line.trim().to_string();
+        let range = error.character..=(error.character + error.len + 1);
         for idx in 0..line.len() {
             if range.contains(&idx) {
                 print!("{}", line.chars().nth(idx).expect("This should not fail.").to_string().bright_black());
@@ -52,7 +52,7 @@ fn main() {
             }
         }
         println!();
-        println!("{}", error.msg);
+        println!("{} {}", " ".repeat(prelude.len()), error.msg);
         return;
     }
 
