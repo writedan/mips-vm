@@ -209,7 +209,7 @@ fn skip_whitespace(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 			}
 			_ => {
 				return Err(LexErr {
-					msg: format!("Unexpected symbol \"{}\". Comma-delimit instruction arguments.", character),
+					msg: format!("Unexpected symbol \"{}\". Comma-delimit instruction arguments.", character.to_string().red()),
 					line: lexer.number,
 					character:  *idx,
 					len: 1

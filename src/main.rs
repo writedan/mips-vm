@@ -43,7 +43,6 @@ fn main() {
         let mut line = &program[error.line].to_string();
         let mut line = line.trim().to_string();
         let range = error.character..(error.character + error.len);
-        print!("\t");
         for idx in 0..line.len() {
             if range.contains(&idx) {
                 print!("{}", line.chars().nth(idx).expect("This should not fail.").to_string().red());
@@ -52,7 +51,7 @@ fn main() {
             }
         }
         println!();
-        println!("\t{}{} {}", " ".repeat(error.character), "^".repeat(error.len).red().bold(), error.msg);
+        println!("{}{} {}", " ".repeat(error.character), "^".repeat(error.len).red().bold(), error.msg);
         return;
     }
 
