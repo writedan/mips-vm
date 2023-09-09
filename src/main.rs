@@ -5,7 +5,6 @@ use clap::Parser;
 use colored::Colorize;
 
 mod lexer;
-use crate::lexer::{Token, Node};
 
 /// A light-weight MIPS emulator and debugger.
 #[derive(Parser, Debug)]
