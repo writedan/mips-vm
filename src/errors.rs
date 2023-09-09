@@ -2,6 +2,8 @@ use std::fmt;
 
 use crate::lexer::tokens::CodeSegment;
 
+use crate::code;
+
 use colored::Colorize;
 
 pub enum Msg {
@@ -30,6 +32,7 @@ impl fmt::Display for Err {
 
 		let mut line = &self.line;
 		let mut line = line.trim().to_string();
+		let mut line = code::syntax_highlight(line);
 
 		write!(f, "{}\n", prelude);
 
