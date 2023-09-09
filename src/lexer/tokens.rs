@@ -1,9 +1,9 @@
 pub struct CodeSegment {
 	// identifiers the location of a token within the text of a program
 
-	line: usize,		// line number
-	idx: usize,			// character index
-	len: usize			// how many characters included
+	pub line: usize,		// line number
+	pub idx: usize,			// character index
+	pub len: usize			// how many characters included
 						// line[idx..=len] being the whole code segment
 }
 
