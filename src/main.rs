@@ -37,7 +37,6 @@ fn main() {
 
     let lexed_program = lexer::read(&program);
     if let Err(error) = lexed_program {
-        println!("{:#?}", error);
         let prelude = format!("{} ({}) on line {} at {}.", "Error".red().bold(), "syntax error".bright_black(), error.line + 1, error.character + 1);
         println!("{}", prelude);
         let mut line = &program[error.line].to_string();

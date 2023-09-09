@@ -23,6 +23,12 @@ pub enum Node { // the lexer will create a vector, containing either trees of to
 	Token(Token)
 }
 
+struct TokenLocation {
+	line: usize,
+	character: usize,
+	length: usize
+}
+
 type LexRes<T> = Result<T, LexErr>;
 
 struct Lexer { // one lexer exists for each line, since this is assembly
@@ -103,6 +109,13 @@ fn tokenize(program: &Vec<String>) -> LexRes<Vec<Node>> {
 			});
 			idx += 1;
 		}
+
+		if lexer.buffer.len() > 0 {
+			match consume_instruction(&mut idx, &mut lexer) {
+				Ok(node) => nodes.push(node),
+				Err(err) => return Err(err)
+			}
+		}
 	}
 
 	Ok(nodes)
@@ -150,7 +163,7 @@ fn consume_instruction(idx: &mut usize, lexer: &mut Lexer) -> LexRes<Node> {
 			' ' => Node::Token(Token::Empty),
 			_ => {
 				return Err(LexErr {
-					msg: format!("Unknown symbol \"{}\"", character.to_string().red().bold()),
+					msg: format!("Unknown symbol \"{}\" while lexing instruction.", character.to_string().red().bold()),
 					line: lexer.number,
 					character: *idx,
 					len: 1
@@ -181,7 +194,7 @@ fn consume_label(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 				consume_comment(idx, &lexer);
 			},
 			_ => return Err(LexErr {
-				msg: format!("Illegal symbol \"{}\".", character.to_string().red()),
+				msg: format!("Illegal symbol \"{}\" while lexing label.", character.to_string().red()),
 				line: lexer.number,
 				character: *idx,
 				len: 1
@@ -322,13 +335,17 @@ fn consume_def_label(idx: &mut usize, lexer: &mut Lexer) -> LexRes<Node> {
 			' ' => {
 				Node::Token(Token::Empty)
 			},
+			'A'..='z' => match consume_instruction(idx, lexer) {
+				Ok(node) => node,
+				Err(err) => return Err(err)
+			},
 			'"' => match consume_string(idx, &lexer) {
 				Ok(node) => node,
 				Err(err) => return Err(err)
 			},
 			'#' => consume_comment(idx, &lexer),
 			_ => return Err(LexErr {
-				msg: format!("Unknown symbol \"{}\".", character.to_string().red().bold()),
+				msg: format!("Unknown symbol \"{}\" while lexing label definition.", character.to_string().red().bold()),
 				line: lexer.number,
 				character: *idx,
 				len: 1
@@ -381,7 +398,7 @@ fn consume_directive(idx: &mut usize, lexer: &Lexer) -> LexRes<Node> {
 			'a'..='z' | 'A'..='Z' => name.push(character),
 			' ' => break, // space deliminates the section name
 			_ => return Err(LexErr {
-				msg: format!("Illegal symbol \"{}\". Only alphabetic characters are legal in section name.", character.to_string().red()),
+				msg: format!("Illegal symbol \"{}\". Only alphabetic characters are legal in directive name.", character.to_string().red()),
 				line: lexer.number,
 				character: *idx,
 				len: 1
