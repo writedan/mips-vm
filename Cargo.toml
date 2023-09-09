@@ -1,5 +1,5 @@
 [package]
-name = "rips"
+name = "rustic-mips"
 version = "0.1.0"
 edition = "2021"
 
