@@ -1,4 +1,4 @@
-struct CodeSegment {
+pub struct CodeSegment {
 	// identifiers the location of a token within the text of a program
 
 	line: usize,		// line number
@@ -13,7 +13,7 @@ pub enum Token {
 	Instruction(String, CodeSegment),	// {name} {arg1}, {arg2}, arguments must be registers or labels
 	Register(String, CodeSegment),		// ${id}
 	Label(String, CodeSegment),			// refers to a named memory location
-	
+
 	StringLiteral(String, CodeSegment),
 	NumberLiteral(i32, CodeSegment),	// numbers are always
 }
