@@ -44,18 +44,23 @@ fn main() {
         }
     }).collect();
 
-    match lexer::tokenize(program) {
+    match lexer::tokenize(&program) {
         Ok(tokens) => {
             println!("{:#?}", tokens);
             match parse::parse(tokens) {
                 Ok(nodes) => {
 
                 },
-                Err(err) => println!("{}", err)
+                Err(err) => handle_err(program, err)
             }
         },
-        Err(err) => println!("{}", err)
+        Err(err) => handle_err(program, err)
     }
+}
+
+fn handle_err(program: Vec<String>, err: errors::Err) {
+    let line = &program[err.segment.line];
+    println!("{}", errors::DisplayableErr::new(err, line));
 }
 
 pub mod mips {

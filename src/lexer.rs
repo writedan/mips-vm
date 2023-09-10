@@ -33,7 +33,6 @@ impl Lexer {
 				len
 			},
 			errtype: errors::ErrType::Syntax,
-			line: text,
 			msg
 		})
 	}
@@ -59,7 +58,7 @@ impl Lexer {
 
 type LexRes<T> = Result<T, errors::Err>;
 
-pub fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
+pub fn tokenize(program: &Vec<String>) -> LexRes<Vec<Token>> {
 	let mut tokens: Vec<Token> = Vec::new();
 
 	for (line_num, line) in program.iter().enumerate() {
@@ -150,7 +149,6 @@ pub fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 					len: 0
 				},
 				errtype: errors::ErrType::Syntax,
-				line: text,
 				msg
 			});
 		}

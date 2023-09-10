@@ -21,17 +21,30 @@ pub enum ErrType {
 pub struct Err {
 	pub segment: CodeSegment,
 	pub errtype: ErrType,
-	pub line: String,
 	pub msg: Msg
 }
 
-impl fmt::Display for Err {
+pub struct DisplayableErr {
+	pub err: Err,
+	pub line: String
+}
+
+impl DisplayableErr {
+	pub fn new(err: Err, line: &String) -> DisplayableErr {
+		DisplayableErr {
+			err,
+			line: line.to_string()
+		}
+	}
+}
+
+impl fmt::Display for DisplayableErr {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		let errtype = match self.errtype {
+		let errtype = match self.err.errtype {
 			ErrType::Syntax => "syntax error"
 		}.to_string().bright_black();
 
-		let prelude = format!("{} ({}) on line {} at {}.", "Error".red().bold(), errtype, self.segment.line + 1, self.segment.idx + 1);
+		let prelude = format!("{} ({}) on line {} at {}.", "Error".red().bold(), errtype, self.err.segment.line + 1, self.err.segment.idx + 1);
 
 		let mut line = &self.line;
 		let mut line = line.trim().to_string();
@@ -39,7 +52,7 @@ impl fmt::Display for Err {
 
 		write!(f, "{}\n", prelude);
 
-		let range = self.segment.idx..(self.segment.idx + self.segment.len);
+		let range = self.err.segment.idx..(self.err.segment.idx + self.err.segment.len);
 
 		for idx in 0..line.len() {
             if range.contains(&idx) {
@@ -51,13 +64,13 @@ impl fmt::Display for Err {
 
         write!(f, "\n");
 
-        match &self.msg {
+        match &self.err.msg {
         	Msg::One(msg) => {
-        		write!(f, "{}{} {}", " ".repeat(self.segment.idx), "^".repeat(self.segment.len).red().bold(), msg);
+        		write!(f, "{}{} {}", " ".repeat(self.err.segment.idx), "^".repeat(self.err.segment.len).red().bold(), msg);
         	},
         	Msg::Many(msgs) => {
         		for (idx, msg) in msgs.iter().enumerate() {
-        			write!(f, "{}{} {}", " ".repeat(self.segment.idx), "^".repeat(self.segment.len).red().bold(), msg);
+        			write!(f, "{}{} {}", " ".repeat(self.err.segment.idx), "^".repeat(self.err.segment.len).red().bold(), msg);
         			if idx <(msgs.len() - 1) {
         				write!(f, "\n");
         			}
