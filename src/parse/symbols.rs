@@ -44,7 +44,9 @@ pub struct Label {
 
 #[derive(Debug)]
 pub enum Instruction {
-
+	LoadImmediate(Register, NumberLiteral),
+	LoadAddress(Register, Label),
+	SystemCall
 }
 
 #[derive(Debug)]
