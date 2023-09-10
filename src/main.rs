@@ -36,7 +36,7 @@ fn main() {
     let program: Vec<String> = io::BufReader::new(file).lines().map(|l| l.expect("Could not parse line.")).collect();
 }
 
-pub mod code {
+pub mod mips {
     // highlight snytax for one line of code
     pub fn syntax_highlight(code: String) -> String {
         // note that red is only to be used for errors

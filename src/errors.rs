@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::lexer::tokens::CodeSegment;
 
-use crate::code;
+use crate::mips;
 
 use colored::Colorize;
 
@@ -32,7 +32,7 @@ impl fmt::Display for Err {
 
 		let mut line = &self.line;
 		let mut line = line.trim().to_string();
-		let mut line = code::syntax_highlight(line);
+		let mut line = mips::syntax_highlight(line);
 
 		write!(f, "{}\n", prelude);
 
