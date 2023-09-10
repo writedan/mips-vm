@@ -6,6 +6,8 @@ use crate::lexer::tokens::*;
 
 use crate::errors;
 
+use colored::Colorize;
+
 pub struct Lexer {
 	// the lexer is initialized for each line
 
@@ -40,6 +42,19 @@ impl Lexer {
 	pub fn len(&self) -> usize {
 		self.buffer.len()
 	}
+
+	pub fn verify_buffer(&self, consumer: &str) -> Result<Token, errors::Err> {
+		if self.buffer.len() > 0 {
+			let msgs = errors::Msg::Many(vec![
+				format!("Trying to consume {} but buffer length = {}", consumer, self.buffer.len()),
+				format!("buffer = \"{}\"", self.buffer.red()),
+				"Buffer should be empty.".to_string()
+			]);
+			return self.error(self.text.len(), 0, msgs);
+		}
+
+		Ok(Token::Empty)
+	}
 }
 
 type LexRes<T> = Result<T, errors::Err>;
@@ -63,7 +78,7 @@ pub fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 				'#' => {
 					consumers::Comment::consume(&mut idx, &mut lexer);
 					None
-				},
+				}
 
 				'.' => {
 					match consumers::Directive::consume(&mut idx, &mut lexer) {
@@ -72,9 +87,43 @@ pub fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 					}
 				}
 
+				':' => {
+					match consumers::DefLabel::consume(&mut idx, &mut lexer) {
+						Ok(token) => Some(token),
+						Err(err) => return Err(err)
+					}
+				}
+
+				'$' => {
+					match consumers::Register::consume(&mut idx, &mut lexer) {
+						Ok(token) => Some(token),
+						Err(err) => return Err(err)
+					}
+				}
+
+				'"' => {
+					match consumers::StringLiteral::consume(&mut idx, &mut lexer) {
+						Ok(token) => Some(token),
+						Err(err) => return Err(err)
+					}
+				}
+
+				'0'..='9' | '-' => {
+					match consumers::NumberLiteral::consume(&mut idx, &mut lexer) {
+						Ok(token) => Some(token),
+						Err(err) => return Err(err)
+					}
+				}
+
+				' ' => {
+					match consumers::Identifier::consume(&mut idx, &mut lexer) {
+						Ok(token) => Some(token),
+						Err(err) => return Err(err)
+					}
+				}
+
 				_ => {
 					lexer.buffer.push(character);
-					lexer.buffer = lexer.buffer.trim().to_string();
 					None
 				}
 			};
