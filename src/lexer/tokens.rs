@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CodeSegment {
 	// identifiers the location of a token within the text of a program
 
@@ -8,7 +8,7 @@ pub struct CodeSegment {
 						// line[idx..=len] being the whole code segment
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Token {
 	Directive(String, CodeSegment), 	// given as ".{name}", controls how following instruction(s)/token(s) are interpreted
 	DefLabel(String, CodeSegment),		// given as "{name}:", stores the following instruction as a named memory location
