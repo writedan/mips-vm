@@ -6,7 +6,7 @@ use colored::Colorize;
 
 mod lexer;
 mod errors;
-mod parser;
+mod parse;
 
 /// A light-weight MIPS emulator and debugger.
 #[derive(Parser, Debug)]
@@ -45,7 +45,12 @@ fn main() {
         }).collect();
     match lexer::tokenize(program) {
         Ok(tokens) => {
-            
+            match parse::parse(tokens) {
+                Ok(nodes) => {
+
+                },
+                Err(err) => println!("{}", err)
+            }
         },
         Err(err) => println!("{}", err)
     }
