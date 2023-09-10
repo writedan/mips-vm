@@ -119,8 +119,8 @@ impl Consumer for Register {
 		lexer.buffer.clear(); // remove our work
 		Ok(Token::Register(identifier, CodeSegment {
 			line: lexer.line,
-			idx: *idx - len,
-			len: len
+			idx: *idx - len - 1,
+			len: len + 1
 		}))
 	}
 }
