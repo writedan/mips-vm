@@ -25,7 +25,6 @@ impl Lexer {
 	}
 
 	pub fn error(&self, idx: usize, len: usize, msg: errors::Msg) -> std::result::Result<Token, errors::Err> {
-		let text = String::from(&self.text);
 		std::result::Result::Err(errors::Err {
 			segment: CodeSegment {
 				line: self.line,
