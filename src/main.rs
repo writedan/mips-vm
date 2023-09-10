@@ -34,7 +34,10 @@ fn main() {
     };
 
     let program: Vec<String> = io::BufReader::new(file).lines().map(|l| l.expect("Could not parse line.")).collect();
-    println!("{:#?}", lexer::tokenize(program));
+    match lexer::tokenize(program) {
+        Ok(tokens) => println!("{:#?}", tokens),
+        Err(err) => println!("{}", err)
+    }
 }
 
 pub mod mips {
