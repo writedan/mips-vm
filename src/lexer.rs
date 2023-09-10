@@ -135,6 +135,25 @@ pub fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 
 			idx += 1;
 		}
+
+		if lexer.buffer.len() > 0 {
+			let msg = errors::Msg::Many(vec![
+				format!("Line ended but buffer length = {}", lexer.buffer.len()),
+				format!("buffer = \"{}\"", lexer.buffer.red()),
+				"Buffer should be empty.".to_string()
+			]);
+			let text = String::from(lexer.text);
+			return std::result::Result::Err(errors::Err {
+				segment: CodeSegment {
+					line: lexer.line,
+					idx,
+					len: 0
+				},
+				errtype: errors::ErrType::Syntax,
+				line: text,
+				msg
+			});
+		}
 	}
 
 	Ok(tokens)
