@@ -118,7 +118,6 @@ impl Consumer for Register {
 		let identifier = String::from(&lexer.buffer);
 		let len = identifier.len();
 		lexer.buffer.clear(); // remove our work
-		*idx += 1;
 		Ok(Token::Register(identifier, CodeSegment {
 			line: lexer.line,
 			idx: *idx - len,
