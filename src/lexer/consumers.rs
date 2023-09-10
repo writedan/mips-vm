@@ -196,11 +196,9 @@ impl Consumer for NumberLiteral {
 			}
 		};
 
-		*idx += 1;
-
 		Ok(Token::NumberLiteral(number, CodeSegment {
 			line: lexer.line,
-			idx: *idx - len,
+			idx: index + 1 - len,
 			len: len
 		}))
 	}
