@@ -20,7 +20,7 @@ impl Consumer for Directive {
 	fn consume(idx: &mut usize, lexer: &mut Lexer) -> Result<Token, errors::Err> {
 		*idx += 1; // skip the initial "."
 
-		if let Err(err) = lexer.verify_buffer("direction") {
+		if let Err(err) = lexer.verify_buffer("directive") {
 			return Err(err);
 		}
 
