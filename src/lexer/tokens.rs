@@ -16,4 +16,6 @@ pub enum Token {
 
 	StringLiteral(String, CodeSegment),
 	NumberLiteral(i32, CodeSegment),	// numbers are always
+
+	Empty
 }
