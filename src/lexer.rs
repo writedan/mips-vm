@@ -116,9 +116,13 @@ pub fn tokenize(program: &Vec<String>) -> LexRes<Vec<Token>> {
 				}
 
 				' ' => {
-					match consumers::Identifier::consume(&mut idx, &mut lexer) {
-						Ok(token) => Some(token),
-						Err(err) => return Err(err)
+					if lexer.len() > 0 {
+						match consumers::Identifier::consume(&mut idx, &mut lexer) {
+							Ok(token) => Some(token),
+							Err(err) => return Err(err)
+						}
+					} else {
+						None
 					}
 				}
 
