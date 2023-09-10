@@ -188,12 +188,13 @@ impl Consumer for NumberLiteral {
 
 		let number = String::from(&lexer.buffer);
 		let len = number.len();
+		let index = lexer.text.find(&number).unwrap();
 		lexer.buffer.clear();
 		let number = match number.parse::<i32>() {
 			Ok(number) => number,
 			Err(err) => {
 				let msgs = errors::Msg::One(format!("Could not cast {} to a number: {}", number.red(), err));
-				return lexer.error(*idx - len, len, msgs);
+				return lexer.error(index, len, msgs);
 			}
 		};
 
