@@ -1,8 +1,10 @@
+#[derive(Debug)]
 pub struct ASTree<T> {
 	root: T,
 	children: Vec<ASTNode<T>>
 }
 
+#[derive(Debug)]
 pub enum ASTNode<T> {
 	Tree(ASTree<T>),
 	Node(T)

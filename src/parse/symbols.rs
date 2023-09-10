@@ -1,5 +1,6 @@
 use crate::lexer::tokens::CodeSegment;
 
+#[derive(Debug)]
 pub enum Symbol {
 	Directive(Directive, CodeSegment),
 	DefLabel(DefLabel, CodeSegment),
@@ -10,6 +11,7 @@ pub enum Symbol {
 	NumberLiteral(NumberLiteral, CodeSegment)
 }
 
+#[derive(Debug)]
 pub enum Register {
 	Z,									// zero = 0
 	AT,									// reserved for assembler
@@ -25,26 +27,32 @@ pub enum Register {
 	RA,									// return address
 }
 
+#[derive(Debug)]
 pub struct Directive {
 	id: String
 }
 
+#[derive(Debug)]
 pub struct DefLabel {
 	id: String
 }
 
+#[derive(Debug)]
 pub struct Label {
 	id: String
 }
 
+#[derive(Debug)]
 pub enum Instruction {
 
 }
 
+#[derive(Debug)]
 pub struct StringLiteral {
 	content: String
 }
 
+#[derive(Debug)]
 pub struct NumberLiteral {
 	value: i32
 }
