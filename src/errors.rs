@@ -14,7 +14,8 @@ pub enum Msg {
 
 #[derive(Debug)]
 pub enum ErrType {
-	Syntax
+	Syntax,
+	Assemble
 }
 
 #[derive(Debug)]
@@ -41,7 +42,8 @@ impl DisplayableErr {
 impl fmt::Display for DisplayableErr {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		let errtype = match self.err.errtype {
-			ErrType::Syntax => "syntax error"
+			ErrType::Syntax => "syntax error",
+			ErrType::Assemble => "assembling error"
 		}.to_string().bright_black();
 
 		let prelude = format!("{} ({}) on line {} at {}.", "Error".red().bold(), errtype, self.err.segment.line + 1, self.err.segment.idx + 1);
