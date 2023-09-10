@@ -16,10 +16,10 @@ pub enum ErrType {
 }
 
 pub struct Err {
-	segment: CodeSegment,
-	errtype: ErrType,
-	line: String,
-	msg: Msg
+	pub segment: CodeSegment,
+	pub errtype: ErrType,
+	pub line: String,
+	pub msg: Msg
 }
 
 impl fmt::Display for Err {
