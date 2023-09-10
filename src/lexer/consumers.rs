@@ -172,6 +172,7 @@ impl Consumer for NumberLiteral {
 				'#' => {
 					Comment::consume(idx, lexer);
 				},
+				'-' => lexer.buffer.push(character),
 				' ' => match skip_whitespace(idx, lexer) {
 					Ok(token) => {},
 					Err(err) => return Err(err)
@@ -191,12 +192,8 @@ impl Consumer for NumberLiteral {
 		let number = match number.parse::<i32>() {
 			Ok(number) => number,
 			Err(err) => {
-				let msgs = errors::Msg::Many(vec![
-					format!("Could not cast {} to a number.", number),
-					"Please ensure it is within the bounds of a 32-bit signed integer.".to_string(),
-					err.to_string()
-				]);
-				return lexer.error(*idx - number.len(), len, msgs);
+				let msgs = errors::Msg::One(format!("Could not cast {} to a number: {}", number.red(), err));
+				return lexer.error(*idx - len, len, msgs);
 			}
 		};
 
