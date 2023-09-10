@@ -34,17 +34,30 @@ fn main() {
         Ok(file) => file,
     };
 
-    let program: Vec<String> = io::BufReader::new(file).lines().map(|l| {
-            match l {
-                Ok(line) => line,
-                Err(why) => {
-                    println!("{} failed to open \"{}\": {}", "Error:".red().bold(), args.file.bright_black(), why);
-                    std::process::exit(0);
-                }
+    let mut program: Vec<String> = io::BufReader::new(file).lines().map(|l| {
+        match l {
+            Ok(line) => line,
+            Err(why) => {
+                println!("{} failed to open \"{}\": {}", "Error:".red().bold(), args.file.bright_black(), why);
+                std::process::exit(0);
             }
-        }).collect();
+        }
+    }).collect();
+
+    let mut final_line = match program.pop() {
+        Some(line) => line,
+        None => {
+            println!("{} file has no final line?", "Error:".red().bold());
+            std::process::exit(0);
+        }
+    };
+
+    final_line.push_str(" # [auto-generated]"); // this is necessary to trigger the final line being read
+    program.push(final_line);
+
     match lexer::tokenize(program) {
         Ok(tokens) => {
+            println!("{:#?}", tokens);
             match parse::parse(tokens) {
                 Ok(nodes) => {
 
