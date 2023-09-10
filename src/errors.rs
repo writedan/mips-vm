@@ -6,15 +6,18 @@ use crate::mips;
 
 use colored::Colorize;
 
+#[derive(Debug)]
 pub enum Msg {
 	One(String),
 	Many(Vec<String>)
 }
 
+#[derive(Debug)]
 pub enum ErrType {
 	Syntax
 }
 
+#[derive(Debug)]
 pub struct Err {
 	pub segment: CodeSegment,
 	pub errtype: ErrType,
