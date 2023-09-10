@@ -47,7 +47,7 @@ fn main() {
     let mut final_line = match program.pop() {
         Some(line) => line,
         None => {
-            println!("{} file has no final line?", "Error:".red().bold());
+            println!("{} blank file.", "Error:".red().bold());
             std::process::exit(0);
         }
     };
