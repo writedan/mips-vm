@@ -58,7 +58,6 @@ impl Consumer for DefLabel {
 		// label definitions are given as "{name}:", so we have to use the buffered value
 		let identifier = lexer.buffer.drain(..).collect::<String>(); // we retain the value but clear the buffer
 		let len = identifier.len();
-		*idx += 1;
 		Ok(Token::DefLabel(identifier, CodeSegment {
 			line: lexer.line,
 			idx: *idx - len,
