@@ -73,7 +73,7 @@ impl Consumer for Identifier {
 		let len = identifier.len();
 		Ok(Token::Identifier(identifier, CodeSegment {
 			line: lexer.line,
-			idx: *idx - len + 1,
+			idx: *idx - len,
 			len: len
 		}))
 	}
