@@ -29,17 +29,17 @@ pub enum Register {
 
 #[derive(Debug)]
 pub struct Directive {
-	id: String
+	pub id: String
 }
 
 #[derive(Debug)]
 pub struct DefLabel {
-	id: String
+	pub id: String
 }
 
 #[derive(Debug)]
 pub struct Label {
-	id: String
+	pub id: String
 }
 
 #[derive(Debug)]
@@ -51,10 +51,10 @@ pub enum Instruction {
 
 #[derive(Debug)]
 pub struct StringLiteral {
-	content: String
+	pub content: String
 }
 
 #[derive(Debug)]
 pub struct NumberLiteral {
-	value: i32
+	pub value: i32
 }
