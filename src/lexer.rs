@@ -74,6 +74,7 @@ pub fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 
 				_ => {
 					lexer.buffer.push(character);
+					lexer.buffer = lexer.buffer.trim().to_string();
 					None
 				}
 			};
