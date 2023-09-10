@@ -34,7 +34,7 @@ fn main() {
         Ok(file) => file,
     };
 
-    let mut program: Vec<String> = io::BufReader::new(file).lines().map(|l| {
+    let program: Vec<String> = io::BufReader::new(file).lines().map(|l| {
         match l {
             Ok(line) => line,
             Err(why) => {
@@ -43,17 +43,6 @@ fn main() {
             }
         }
     }).collect();
-
-    let mut final_line = match program.pop() {
-        Some(line) => line,
-        None => {
-            println!("{} blank file.", "Error:".red().bold());
-            std::process::exit(0);
-        }
-    };
-
-    final_line.push_str(" # [auto-generated]"); // this is necessary to trigger the final line being read
-    program.push(final_line);
 
     match lexer::tokenize(program) {
         Ok(tokens) => {

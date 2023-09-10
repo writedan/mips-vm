@@ -65,6 +65,7 @@ pub fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 	for (line_num, line) in program.iter().enumerate() {
 		let line = line.trim();
 		let line = line.to_string();
+		let line = format!("{} # auto-generated", line);
 		let mut lexer = Lexer {
 			line: line_num,
 			text: line,
