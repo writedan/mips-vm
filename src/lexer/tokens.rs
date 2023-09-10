@@ -12,9 +12,8 @@ pub struct CodeSegment {
 pub enum Token {
 	Directive(String, CodeSegment), 	// given as ".{name}", controls how following instruction(s)/token(s) are interpreted
 	DefLabel(String, CodeSegment),		// given as "{name}:", stores the following instruction as a named memory location
-	Instruction(String, CodeSegment),	// {name} {arg1}, {arg2}, arguments must be registers or labels
+	Identifier(String, CodeSegment),	// some yet unknown identifier in the form {id}, will have to be parsed to its correct value
 	Register(String, CodeSegment),		// ${id}
-	Label(String, CodeSegment),			// refers to a named memory location
 
 	StringLiteral(String, CodeSegment),
 	NumberLiteral(i32, CodeSegment),	// numbers are always
