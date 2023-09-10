@@ -45,7 +45,7 @@ impl Lexer {
 type LexRes<T> = Result<T, errors::Err>;
 
 fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
-	let tokens: Vec<Token> = Vec::new();
+	let mut tokens: Vec<Token> = Vec::new();
 
 	for (line_num, line) in program.iter().enumerate() {
 		let line = line.trim();
@@ -66,7 +66,10 @@ fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 				},
 
 				'.' => {
-					None
+					match consumers::Directive::consume(&mut idx, &mut lexer) {
+						Ok(token) => Some(token),
+						Err(err) => return Err(err)
+					}
 				}
 
 				_ => {
@@ -74,6 +77,10 @@ fn tokenize(program: Vec<String>) -> LexRes<Vec<Token>> {
 					None
 				}
 			};
+
+			if let Some(token) = token {
+				tokens.push(token);
+			}
 
 			idx += 1;
 		}
