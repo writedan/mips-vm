@@ -6,6 +6,7 @@ use colored::Colorize;
 
 mod lexer;
 mod errors;
+mod parser;
 
 /// A light-weight MIPS emulator and debugger.
 #[derive(Parser, Debug)]
@@ -33,9 +34,19 @@ fn main() {
         Ok(file) => file,
     };
 
-    let program: Vec<String> = io::BufReader::new(file).lines().map(|l| l.expect("Could not parse line.")).collect();
+    let program: Vec<String> = io::BufReader::new(file).lines().map(|l| {
+            match l {
+                Ok(line) => line,
+                Err(why) => {
+                    println!("{} failed to open \"{}\": {}", "Error:".red().bold(), args.file.bright_black(), why);
+                    std::process::exit(0);
+                }
+            }
+        }).collect();
     match lexer::tokenize(program) {
-        Ok(tokens) => println!("{:#?}", tokens),
+        Ok(tokens) => {
+            
+        },
         Err(err) => println!("{}", err)
     }
 }
