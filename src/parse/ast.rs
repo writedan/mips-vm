@@ -26,6 +26,10 @@ impl<T> ASTree<T> {
 		self.children.push(ASTNode::Node(child));
 	}
 
+	pub fn add_node(&mut self, child: ASTNode<T>) {
+		self.children.push(child);
+	}
+
 	pub fn add_subtree(mut self, child: ASTree<T>) {
 		self.children.push(ASTNode::Tree(child));
 	}

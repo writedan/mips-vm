@@ -1,7 +1,9 @@
 mod ast;
 mod symbols;
+mod parsers;
 
 use crate::parse::symbols::*;
+use crate::parse::parsers::Parser;
 use crate::parse::ast::*;
 use crate::lexer::tokens::CodeSegment;
 use crate::lexer::tokens::Token;
@@ -18,25 +20,18 @@ pub fn parse(program: &Vec<Token>) -> Return {
 	let mut idx = 0;
 	while idx < program.len() {
 		let token = &program[idx];
-		let symbol: Option<Symbol> = match token {
-			Token::Register(id, segment) => {
-				match id.as_str() {
-					"0" | "zero" => Some(Symbol::Register(Register::Z, segment.clone())),
-					"1" | "at" => Some(Symbol::Register(Register::AT, segment.clone())),
-					"2" | "v0" => Some(Symbol::Register(Register::V0, segment.clone())),
-					"3" | "v1" => Some(Symbol::Register(Register::V1, segment.clone())),
-					"4" | "a0" => Some(Symbol::Register(Register::A0, segment.clone())),
-					_ => {
-						return call_err(segment, errors::Msg::One(format!("Unknown register \"{}\".", id.red())));
-					}
+		let symbol: Option<ASTNode<Symbol>> = match token {
+			Token::Directive(id, segment) => {
+				match parsers::Directive::parse(&mut idx, &program) {
+					Ok(node) => Some(node),
+					Err(err) => return call_err(segment, err)
 				}
 			}
-
 			_ => None
 		};
 
 		match symbol {
-			Some(symbol) => nodes.push(ASTNode::Node(symbol)),
+			Some(symbol) => nodes.push(symbol),
 			None => {}
 		}
 

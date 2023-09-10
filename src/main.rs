@@ -48,7 +48,7 @@ fn main() {
         Ok(tokens) => {
             match parse::parse(&tokens) {
                 Ok(nodes) => {
-
+                    println!("{:#?}", nodes);
                 },
                 Err(err) => handle_err(program, err)
             }
