@@ -46,8 +46,7 @@ fn main() {
 
     match lexer::tokenize(&program) {
         Ok(tokens) => {
-            println!("{:#?}", tokens);
-            match parse::parse(tokens) {
+            match parse::parse(&tokens) {
                 Ok(nodes) => {
 
                 },
