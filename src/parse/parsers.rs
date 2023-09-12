@@ -35,6 +35,27 @@ impl Parser for Directive {
 						}
 					}
 				},
+				"asciiz" => {
+					// next token must be a string literal
+					*idx += 1;
+					let token = &tokens[*idx];
+					if let Token::StringLiteral(string, segment) = token {
+						let node = Symbol::StringLiteral(StringLiteral {
+							content: string.to_string()
+						}, segment.clone());
+						tree.add_node(ASTNode::Node(node));
+					} else {
+						let msg = errors::Msg::Many(vec![
+							format!("Unexpected token {:?}.", token),
+							format!("Expected string literal.")
+						]);
+						return Err(errors::Err {
+							segment: parse::extract_segment(token),
+							msg,
+							errtype: errors::ErrType::Assemble
+						});
+					}
+				}
 				_ => {
 					let msg = errors::Msg::One(format!("Unknown directive {}.", id.red()));
 					return Err(errors::Err{
