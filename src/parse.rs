@@ -24,7 +24,7 @@ pub fn parse(program: &Vec<Token>) -> Return {
 			Token::Directive(id, segment) => {
 				match parsers::Directive::parse(&mut idx, &program) {
 					Ok(node) => Some(node),
-					Err(err) => return call_err(segment, err)
+					Err(err) => return Err(err)
 				}
 			}
 			_ => None
@@ -47,4 +47,18 @@ fn call_err(segment: &CodeSegment, msg: errors::Msg) -> Return {
 		errtype: errors::ErrType::Assemble,
 		msg
 	})
+}
+
+fn extract_segment(token: &Token) -> CodeSegment {
+	match token {
+		Token::Directive(_, segment) => segment.clone(),
+		Token::DefLabel(_, segment) => segment.clone(),
+		Token::Identifier(_, segment) => segment.clone(),
+		Token::Register(_, segment) => segment.clone(),
+		Token::StringLiteral(_, segment) => segment.clone(),
+		Token::NumberLiteral(_, segment) => segment.clone(),
+		_ => {
+			panic!("Illegal token {:?}", token);
+		}
+	}
 }

@@ -7,12 +7,12 @@ use crate::parse;
 use colored::Colorize;
 
 pub trait Parser {
-	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Msg>;
+	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err>;
 }
 
 pub struct Directive {}
 impl Parser for Directive {
-	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Msg> {
+	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
 		let token = &tokens[*idx];
 		if let Token::Directive(id, segment) = token {
 			let symbol = Symbol::Directive(symbols::Directive{
@@ -35,17 +35,29 @@ impl Parser for Directive {
 						}
 					}
 				},
-				_ => return Err(errors::Msg::One(format!("Unknown directive {}.", id.red())))
+				_ => {
+					let msg = errors::Msg::One(format!("Unknown directive {}.", id.red()));
+					return Err(errors::Err{
+						segment: segment.clone(),
+						errtype: errors::ErrType::Assemble,
+						msg
+					});
+				}
 			};
 
 			Ok(ASTNode::Tree(tree))
 		} else {
-			Err(errors::Msg::One(format!("Expected directive token, found {:?}", token)))
+			let msg = errors::Msg::One(format!("Expected directive token, found {:?}", token));
+			return Err(errors::Err{
+				segment: parse::extract_segment(&token),
+				errtype: errors::ErrType::Assemble,
+				msg
+			});
 		}
 	}
 }
 
-fn parse_until_next_directive(idx: &mut usize, tokens: &Vec<Token>) -> Result<Vec<ASTNode<Symbol>>, errors::Msg> {
+fn parse_until_next_directive(idx: &mut usize, tokens: &Vec<Token>) -> Result<Vec<ASTNode<Symbol>>, errors::Err> {
 	*idx += 1; // skip initial token
 	let mut nodes: Vec<Token> = Vec::new();
 	while *idx < tokens.len() {
@@ -62,6 +74,6 @@ fn parse_until_next_directive(idx: &mut usize, tokens: &Vec<Token>) -> Result<Ve
 	}
 	match parse::parse(&nodes) {
 		Ok(nodes) => Ok(nodes),
-		Err(err) => {Err(err.msg)}
+		Err(err) => {Err(err)}
 	}
 }
