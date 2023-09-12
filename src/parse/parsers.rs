@@ -46,7 +46,7 @@ impl Parser for Directive {
 						tree.add_node(ASTNode::Node(node));
 					} else {
 						let msg = errors::Msg::Many(vec![
-							format!("Unexpected token {:?}.", token),
+							format!("Unexpected token {}.", token),
 							format!("Expected string literal.")
 						]);
 						return Err(errors::Err {
@@ -68,7 +68,7 @@ impl Parser for Directive {
 
 			Ok(ASTNode::Tree(tree))
 		} else {
-			let msg = errors::Msg::One(format!("Expected directive token, found {:?}", token));
+			let msg = errors::Msg::One(format!("Expected directive token, found {}", token));
 			return Err(errors::Err{
 				segment: parse::extract_segment(&token),
 				errtype: errors::ErrType::Assemble,
