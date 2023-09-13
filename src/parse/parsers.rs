@@ -10,6 +10,33 @@ pub trait Parser {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err>;
 }
 
+pub struct DefLabel{}
+impl Parser for DefLabel {
+	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
+		if let Token::DefLabel(id, segment) = &tokens[*idx] {
+			let symbol = Symbol::DefLabel(symbols::DefLabel {
+				id: id.to_string()
+			}, segment.clone());
+			let mut tree = ASTree::<Symbol>::new(symbol);
+
+			*idx += 1; // the label will attach to the memory location of the next symbol, whether instruction or directive-allocation
+			match parse::parse_one(idx, tokens) {
+				Ok(symbol) => tree.add_node(symbol),
+				Err(err) => return Err(err)
+			}
+
+			return Ok(ASTNode::Tree(tree));
+		}
+
+		let msg = errors::Msg::One(format!("Unexpected token {}", &tokens[*idx].to_string().red()));
+		Err(errors::Err {
+			segment: parse::extract_segment(&tokens[*idx]),
+			msg,
+			errtype: errors::ErrType::Assemble
+		})
+	}
+}
+
 pub struct Directive {}
 impl Parser for Directive {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
@@ -46,7 +73,7 @@ impl Parser for Directive {
 						tree.add_node(ASTNode::Node(node));
 					} else {
 						let msg = errors::Msg::Many(vec![
-							format!("Unexpected token {}.", token),
+							format!("Unexpected token {}.", token.to_string().red()),
 							format!("Expected string literal.")
 						]);
 						return Err(errors::Err {
@@ -68,7 +95,7 @@ impl Parser for Directive {
 
 			Ok(ASTNode::Tree(tree))
 		} else {
-			let msg = errors::Msg::One(format!("Expected directive token, found {}", token));
+			let msg = errors::Msg::One(format!("Expected directive token, found {}", token.to_string().red()));
 			return Err(errors::Err{
 				segment: parse::extract_segment(&token),
 				errtype: errors::ErrType::Assemble,
