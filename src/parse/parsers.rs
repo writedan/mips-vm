@@ -249,7 +249,10 @@ fn parse_until_next_directive(idx: &mut usize, tokens: &Vec<Token>) -> Result<Ve
 		let token = &tokens[*idx];
 		if let Token::Directive(id, segment) = token {
 			match id.as_str() {
-				"data" | "text" => break,
+				"data" | "text" => {
+					*idx -= 1;
+					break
+				},
 				_ => nodes.push(token.clone())
 			}
 		} else {
@@ -257,6 +260,7 @@ fn parse_until_next_directive(idx: &mut usize, tokens: &Vec<Token>) -> Result<Ve
 		}
 		*idx += 1;
 	}
+
 	match parse::parse(&nodes) {
 		Ok(nodes) => Ok(nodes),
 		Err(err) => {Err(err)}
