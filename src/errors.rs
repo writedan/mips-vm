@@ -68,11 +68,11 @@ impl fmt::Display for DisplayableErr {
 
         match &self.err.msg {
         	Msg::One(msg) => {
-        		write!(f, "{}{} {}", " ".repeat(self.err.segment.idx), "^".repeat(self.err.segment.len).red().bold(), msg);
+        		write!(f, "{}{} {}", " ".repeat(self.err.segment.idx), "^".repeat(self.err.segment.len).red().bold(), msg.bold());
         	},
         	Msg::Many(msgs) => {
         		for (idx, msg) in msgs.iter().enumerate() {
-        			write!(f, "{}{} {}", " ".repeat(self.err.segment.idx), "^".repeat(self.err.segment.len).red().bold(), msg);
+        			write!(f, "{}{} {}", " ".repeat(self.err.segment.idx), "^".repeat(self.err.segment.len).red().bold(), msg.bold());
         			if idx <(msgs.len() - 1) {
         				write!(f, "\n");
         			}
