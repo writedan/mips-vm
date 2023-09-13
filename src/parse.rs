@@ -81,6 +81,15 @@ pub fn parse(program: &Vec<Token>) -> Return {
 	Ok(nodes)
 }
 
+pub fn transform(nodes: Vec<ASTNode<Symbol>>) -> BaseASTree<Symbol> {
+	let mut basetree = BaseASTree::<Symbol>::new();
+	for node in nodes {
+		basetree.add_node(node);
+	}
+
+	return basetree;
+}
+
 fn call_err(segment: &CodeSegment, msg: errors::Msg) -> Return {
 	Err(errors::Err {
 		segment: segment.clone(),

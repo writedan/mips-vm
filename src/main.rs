@@ -48,7 +48,8 @@ fn main() {
         Ok(tokens) => {
             match parse::parse(&tokens) {
                 Ok(nodes) => {
-                    println!("{:#?}", nodes);
+                    let tree = parse::transform(nodes);
+                    println!("{:#?}", tree);
                 },
                 Err(err) => handle_err(program, err)
             }
