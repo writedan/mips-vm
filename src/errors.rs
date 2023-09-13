@@ -43,7 +43,7 @@ impl fmt::Display for DisplayableErr {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		let errtype = match self.err.errtype {
 			ErrType::Syntax => "syntax error",
-			ErrType::Assemble => "assembling error"
+			ErrType::Assemble => "parse error"
 		}.to_string().bright_black();
 
 		let prelude = format!("{} ({}) on line {} at {}.", "Error".red().bold(), errtype, self.err.segment.line + 1, self.err.segment.idx + 1);
