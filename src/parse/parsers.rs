@@ -15,9 +15,7 @@ pub struct Label;
 impl Parser for Label {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
 		if let Token::Identifier(id, segment) = &tokens[*idx] {
-			let symbol = Symbol::Label(symbols::Label {
-				id: id.to_string()
-			}, segment.clone());
+			let symbol = Symbol::Label(id.to_string(), segment.clone());
 
 			return Ok(ASTNode::Node(symbol));
 		}
@@ -39,9 +37,7 @@ pub struct NumberLiteral;
 impl Parser for NumberLiteral {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
 		if let Token::NumberLiteral(num, segment) = &tokens[*idx] {
-			let symbol = Symbol::NumberLiteral(symbols::NumberLiteral {
-				value: *num
-			}, segment.clone());
+			let symbol = Symbol::NumberLiteral(*num, segment.clone());
 
 			return Ok(ASTNode::Node(symbol));
 		}
@@ -147,9 +143,7 @@ pub struct DefLabel{}
 impl Parser for DefLabel {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
 		if let Token::DefLabel(id, segment) = &tokens[*idx] {
-			let symbol = Symbol::DefLabel(symbols::DefLabel {
-				id: id.to_string()
-			}, segment.clone());
+			let symbol = Symbol::DefLabel(id.to_string(), segment.clone());
 			let mut tree = ASTree::<Symbol>::new(symbol);
 
 			*idx += 1; // the label will attach to the memory location of the next symbol, whether instruction or directive-allocation
@@ -179,9 +173,7 @@ impl Parser for Directive {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
 		let token = &tokens[*idx];
 		if let Token::Directive(id, segment) = token {
-			let symbol = Symbol::Directive(symbols::Directive{
-				id: id.to_string()
-			}, segment.clone());
+			let symbol = Symbol::Directive(id.to_string(), segment.clone());
 			let mut tree = ASTree::<Symbol>::new(symbol);
 
 			match id.as_str() {
@@ -204,9 +196,7 @@ impl Parser for Directive {
 					*idx += 1;
 					let token = &tokens[*idx];
 					if let Token::StringLiteral(string, segment) = token {
-						let node = Symbol::StringLiteral(StringLiteral {
-							content: string.to_string()
-						}, segment.clone());
+						let node = Symbol::StringLiteral(string.to_string(), segment.clone());
 						tree.add_node(ASTNode::Node(node));
 					} else {
 						let msg = errors::Msg::Many(vec![
