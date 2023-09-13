@@ -30,6 +30,41 @@ pub enum Register {
 	RA,									// return address
 }
 
+pub fn parse_syscall(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
+	let instruction = Symbol::Instruction(Instruction::SystemCall, parse::extract_segment(&tokens[*idx]));
+	Ok(ASTNode::Node(instruction))
+}
+
+pub fn parse_la(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
+	*idx += 1;
+	let register = match parsers::Register::parse(idx, tokens) {
+		Ok(node) => node,
+		Err(err) => return Err(err)
+	};
+
+	*idx += 1;
+	let value = match parsers::Label::parse(idx, tokens) {
+		Ok(node) => node,
+		Err(err) => return Err(err)
+	};
+
+	let head_segment = parse::extract_segment(&tokens[*idx - 2]);
+	let tail_segment = parse::extract_segment(&tokens[*idx]);
+	let full_segment = CodeSegment {
+		line: head_segment.line,
+		idx: head_segment.idx,
+		len: (tail_segment.len + tail_segment.idx) - head_segment.idx
+	};
+
+	let instruction = Symbol::Instruction(Instruction::LoadAddress, full_segment.clone());
+
+	let mut tree = ASTree::<Symbol>::new(instruction);
+	tree.add_node(register);
+	tree.add_node(value);
+
+	Ok(ASTNode::Tree(tree))
+}
+
 
 pub fn parse_li(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
 	*idx += 1;

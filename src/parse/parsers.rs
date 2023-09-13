@@ -11,6 +11,30 @@ pub trait Parser {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err>;
 }
 
+pub struct Label;
+impl Parser for Label {
+	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
+		if let Token::Identifier(id, segment) = &tokens[*idx] {
+			let symbol = Symbol::Label(symbols::Label {
+				id: id.to_string()
+			}, segment.clone());
+
+			return Ok(ASTNode::Node(symbol));
+		}
+
+		let msg = errors::Msg::Many(vec![
+			format!("Unexpected token {}.", &tokens[*idx].to_string().red()),
+			"Expected label.".to_string()
+		]);
+
+		Err(errors::Err{
+			segment: parse::extract_segment(&tokens[*idx]),
+			msg,
+			errtype: errors::ErrType::Assemble
+		})
+	}
+}
+
 pub struct NumberLiteral;
 impl Parser for NumberLiteral {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
@@ -89,10 +113,11 @@ impl Parser for Instruction {
 	fn parse(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
 		if let Token::Identifier(id, segment) = &tokens[*idx] {
 			match id.as_str() {
-				"li" => match instructions::parse_li(idx, tokens) {
-					Ok(tree) => return Ok(tree),
-					Err(err) => return Err(err)
-				}
+				"li" => return instructions::parse_li(idx, tokens),
+
+				"la" => return instructions::parse_la(idx, tokens),
+
+				"syscall" => return instructions::parse_syscall(idx, tokens),
 
 				_ => {
 					let msg = errors::Msg::One(format!("Unknown instruction {}.", id.red()));
