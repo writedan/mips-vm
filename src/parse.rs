@@ -1,6 +1,7 @@
 mod ast;
 mod symbols;
 mod parsers;
+mod instructions;
 
 use crate::parse::symbols::*;
 use crate::parse::parsers::Parser;
@@ -34,7 +35,11 @@ pub fn parse_one(idx: &mut usize, program: &Vec<Token>) -> ParRes<ASTNode<Symbol
 		Token::Identifier(id, segment) => {
 			// we can assume this to be an instruction, because labels can only occur after instructions
 			// thus labels will be consumed elsewhere
-			None
+			// labels included here will fail to validate as instructions for one reason or anotehr
+			match parsers::Instruction::parse(idx, &program) {
+				Ok(node) => Some(node),
+				Err(err) => return Err(err)
+			}
 		}
 
 		_ => {
