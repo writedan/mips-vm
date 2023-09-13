@@ -1,15 +1,22 @@
+use crate::lexer::tokens::{Token, CodeSegment};
+use crate::parse::parsers::Parser;
+use crate::parse::parsers;
 use crate::parse::symbols::*;
+use crate::parse::ast::*;
+use crate::parse;
+use crate::errors;
+
 
 #[derive(Debug)]
 pub enum Instruction {
-	LoadImmediate(Register, NumberLiteral),
-	LoadAddress(Register, Label),
+	LoadImmediate,
+	LoadAddress,
 	SystemCall
 }
 
 #[derive(Debug)]
 pub enum Register {
-	Z,									// zero = 0
+	Z0,									// zero = 0
 	AT,									// reserved for assembler
 	V0, V1,								// values
 	A0, A1, A2, A3,						// arguments
@@ -21,4 +28,35 @@ pub enum Register {
 	SP,									// stack pointer
 	FP,									// frame pointer
 	RA,									// return address
+}
+
+
+pub fn parse_li(idx: &mut usize, tokens: &Vec<Token>) -> Result<ASTNode<Symbol>, errors::Err> {
+	*idx += 1;
+	let register = match parsers::Register::parse(idx, tokens) {
+		Ok(node) => node,
+		Err(err) => return Err(err)
+	};
+
+	*idx += 1;
+	let value = match parsers::NumberLiteral::parse(idx, tokens) {
+		Ok(node) => node,
+		Err(err) => return Err(err)
+	};
+
+	let head_segment = parse::extract_segment(&tokens[*idx - 2]);
+	let tail_segment = parse::extract_segment(&tokens[*idx]);
+	let full_segment = CodeSegment {
+		line: head_segment.line,
+		idx: head_segment.idx,
+		len: (tail_segment.len + tail_segment.idx) - head_segment.idx
+	};
+
+	let instruction = Symbol::Instruction(Instruction::LoadImmediate, full_segment.clone());
+
+	let mut tree = ASTree::<Symbol>::new(instruction);
+	tree.add_node(register);
+	tree.add_node(value);
+
+	Ok(ASTNode::Tree(tree))
 }
